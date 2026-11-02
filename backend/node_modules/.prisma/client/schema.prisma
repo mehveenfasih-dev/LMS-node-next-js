@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  roleID   Int    @id @default(autoincrement())
+  roleName String @unique(map: "UQ_Roles_roleName") @db.VarChar(50)
+  users    User[]
+
+  @@map("Roles")
+}
+
+model User {
+  userID         Int             @id @default(autoincrement())
+  roleID         Int
+  fullName       String          @db.VarChar(150)
+  email          String          @unique(map: "UQ_Users_email") @db.VarChar(254)
+  passwordHash   String          @db.VarChar(255)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now()) @db.DateTime
+  role           Role            @relation(fields: [roleID], references: [roleID], onUpdate: Cascade, onDelete: NoAction, map: "fk_users_role")
+  borrowRequests BorrowRequest[]
+
+  @@map("Users")
+}
+
+model Category {
+  categoryID       Int            @id @default(autoincrement())
+  parentCategoryID Int?
+  categoryName     String         @unique(map: "UQ_Categories_categoryName") @db.VarChar(100)
+  parent           Category?      @relation("CategoryTree", fields: [parentCategoryID], references: [categoryID], onUpdate: NoAction, onDelete: NoAction, map: "fk_category_parent")
+  children         Category[]     @relation("CategoryTree")
+  bookCategories   BookCategory[]
+
+  @@map("Categories")
+}
+
+model Author {
+  authorID    Int          @id @default(autoincrement())
+  authorName  String       @db.VarChar(150)
+  bookAuthors BookAuthor[]
+
+  @@map("Authors")
+}
+
+model Book {
+  bookID         Int            @id @default(autoincrement())
+  title          String         @db.VarChar(255)
+  ISBN           String?        @db.VarChar(20)
+  publishedYear  Int?           @db.SmallInt
+  publisher      String         @default("") @db.VarChar(150)
+  pages          Int            @default(1)
+  description    String         @default("") @db.VarChar(Max)
+  createdAt      DateTime       @default(now()) @db.DateTime
+  bookAuthors    BookAuthor[]
+  bookCopies     BookCopy[]
+  bookCategories BookCategory[]
+
+  @@index([title], map: "idx_books_title")
+  @@map("Books")
+}
+
+model BookAuthor {
+  bookID      Int
+  authorID    Int
+  authorOrder Int    @default(1) @db.TinyInt
+  book        Book   @relation(fields: [bookID], references: [bookID], onUpdate: Cascade, onDelete: Cascade, map: "fk_ba_book")
+  author      Author @relation(fields: [authorID], references: [authorID], onUpdate: Cascade, onDelete: Cascade, map: "fk_ba_author")
+
+  @@id([bookID, authorID])
+  @@map("BookAuthors")
+}
+
+model BookCopy {
+  copyID         Int             @id @default(autoincrement())
+  bookID         Int
+  barcode        String          @unique(map: "UQ_BookCopies_barcode") @db.VarChar(100)
+  copyStatus     String          @default("AVAILABLE") @db.VarChar(20)
+  book           Book            @relation(fields: [bookID], references: [bookID], onUpdate: Cascade, onDelete: NoAction, map: "fk_copies_book")
+  borrowRequests BorrowRequest[]
+
+  @@index([bookID, copyStatus], map: "idx_copies_book_status")
+  @@map("BookCopies")
+}
+
+model BorrowRequest {
+  requestID   BigInt    @id @default(autoincrement())
+  copyID      Int
+  userID      Int
+  status      String    @default("PENDING") @db.VarChar(20)
+  requestedAt DateTime  @default(now()) @db.DateTime
+  approvedAt  DateTime? @db.DateTime
+  dueAt       DateTime? @db.DateTime
+  returnedAt  DateTime? @db.DateTime
+  copy        BookCopy  @relation(fields: [copyID], references: [copyID], onUpdate: Cascade, onDelete: NoAction, map: "fk_request_copy")
+  user        User      @relation(fields: [userID], references: [userID], onUpdate: Cascade, onDelete: NoAction, map: "fk_request_user")
+
+  @@index([userID, status], map: "idx_request_user_status")
+  @@index([status, dueAt], map: "idx_request_status_due")
+  @@index([copyID, status], map: "idx_request_copy_status")
+  @@map("BorrowRequests")
+}
+
+model BookCategory {
+  bookID     Int
+  categoryID Int
+  book       Book     @relation(fields: [bookID], references: [bookID], onUpdate: Cascade, onDelete: Cascade, map: "fk_bc_book")
+  category   Category @relation(fields: [categoryID], references: [categoryID], onUpdate: Cascade, onDelete: Cascade, map: "fk_bc_category")
+
+  @@id([bookID, categoryID])
+  @@index([categoryID], map: "idx_bc_category")
+  @@map("BookCategories")
+}
+
+model BookAudit {
+  auditID    Int       @id @default(autoincrement())
+  bookID     Int?
+  actionName String?   @db.VarChar(20)
+  actionTime DateTime? @default(now()) @db.DateTime
+
+  @@map("BookAudit")
+}
