@@ -3,7 +3,7 @@ const { getDatabaseProvider } = require("../config/db-provider")
 let activeProvider
 const repositoryContracts = {
   books: ["list", "findById", "save", "remove"],
-  users: ["findByEmail", "findById", "list", "createMember", "findOrCreateGoogle", "setActive"],
+  users: ["findByEmail", "findById", "list", "createMember", "createAdmin", "findOrCreateGoogle", "setActive"],
   requests: ["list", "findById", "create", "changeStatus"],
   reports: ["summary", "monthly", "categories"],
 }
@@ -37,10 +37,10 @@ function getDataProvider() {
     return activeProvider
   }
 
-  throw new Error(
-    `DB_PROVIDER="${providerName}" is recognized but not implemented yet. ` +
-      "Add a provider adapter with the database lifecycle and repository contracts before enabling it.",
-  )
+  const provider = require("./mongodb")
+  validateProvider(provider, providerName)
+  activeProvider = provider
+  return activeProvider
 }
 
 module.exports = { getDataProvider }

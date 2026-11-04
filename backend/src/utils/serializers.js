@@ -45,7 +45,9 @@ const toBook = (book) => {
     pages: book.pages,
     description: book.description,
     totalCopies: book.bookCopies.length,
-    availableCopies: book.bookCopies.filter((copy) => copy?.copyStatus === "AVAILABLE").length,
+    availableCopies: book.bookCopies.filter(
+      (copy) => copy?.copyStatus === "AVAILABLE" || copy?.copyStatus === "PENDING_REQUEST",
+    ).length,
   }
 }
 

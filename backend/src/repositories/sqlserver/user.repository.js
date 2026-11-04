@@ -22,8 +22,8 @@ const findById = (id) => prisma.user.findUnique({ where: { userID: parseId(id) }
 
 const list = () => prisma.user.findMany({ include, orderBy: { createdAt: "desc" } })
 
-const createMember = async ({ name, email, password }) => {
-  const roleID = await getRoleId("member")
+const createWithRole = async ({ name, email, password }, roleName) => {
+  const roleID = await getRoleId(roleName)
   try {
     return await prisma.user.create({
       data: {
@@ -41,6 +41,9 @@ const createMember = async ({ name, email, password }) => {
     throw error
   }
 }
+
+const createMember = (input) => createWithRole(input, "member")
+const createAdmin = (input) => createWithRole(input, "admin")
 
 const findOrCreateGoogle = async ({ name, email }) => {
   const normalized = normalizeEmail(email)
@@ -71,4 +74,4 @@ const setActive = async (id, active) => {
   }
 }
 
-module.exports = { findByEmail, findById, list, createMember, findOrCreateGoogle, setActive }
+module.exports = { findByEmail, findById, list, createMember, createAdmin, findOrCreateGoogle, setActive }
