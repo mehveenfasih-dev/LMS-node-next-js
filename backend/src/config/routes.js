@@ -14,10 +14,13 @@ const ROUTES = {
     LOGOUT: "/logout",
     ME: "/me",
     GOOGLE: "/google",
+    SOCKET_TICKET: "/socket-ticket",
   },
   USERS: { PREFIX: "/users" },
   BOOKS: { PREFIX: "/books" },
   REQUESTS: { PREFIX: "/requests" },
+  NOTIFICATIONS: { PREFIX: "/notifications", MARK_READ: "/:id/read" },
+  REALTIME: { PREFIX: "/realtime", EVENTS: "/events" },
   REPORTS: {
     PREFIX: "/reports",
     SUMMARY: "/summary",

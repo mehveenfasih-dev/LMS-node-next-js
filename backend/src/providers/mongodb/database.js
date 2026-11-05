@@ -41,6 +41,12 @@ async function connect() {
       nextDb.collection("requests").createIndex({ requestID: 1 }, { unique: true }),
       nextDb.collection("requests").createIndex({ userID: 1, bookID: 1, status: 1 }),
       nextDb.collection("requests").createIndex({ requestedAt: -1, requestID: -1 }),
+      nextDb.collection("notifications").createIndex({ notificationID: 1 }, { unique: true }),
+      nextDb.collection("notifications").createIndex(
+        { userID: 1, dedupeKey: 1 },
+        { unique: true },
+      ),
+      nextDb.collection("notifications").createIndex({ userID: 1, createdAt: -1 }),
     ])
     client = nextClient
     db = nextDb

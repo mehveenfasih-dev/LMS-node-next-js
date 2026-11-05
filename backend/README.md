@@ -15,6 +15,35 @@ The Next.js app should use external backend mode for either provider. Set
 `BACKEND_API_URL=http://localhost:5000/api/v1` in its environment. This keeps database credentials
 server-side in the Express backend.
 
+## Realtime notifications
+
+The Express HTTP server also hosts Socket.IO at the same origin. Connections require a one-minute
+ticket issued by the authenticated API; the backend reloads the active user and role before joining
+`user:{userId}` or (admins only) `admins`. Clients cannot request room membership. Exact browser
+origins are restricted by `CLIENT_ORIGIN`.
+
+Set `NEXT_PUBLIC_BACKEND_MODE=external` in Next.js to use the Express Socket.IO endpoint directly.
+`NEXT_PUBLIC_SOCKET_URL` is optional in this mode and defaults to the API origin. For Next.js
+internal mode, run this backend as the realtime server too, set `NEXT_PUBLIC_SOCKET_URL` to its
+public origin, set the same random `SOCKET_AUTH_SECRET` (at least 32 characters) in both apps, and
+configure `BACKEND_API_URL` plus `BACKEND_INTERNAL_KEY` in Next.js. The backend's `INTERNAL_API_KEY`
+must match; it protects the server-to-server event bridge. Without that bridge, internal mode still
+stores and retrieves notifications, but cannot push request events to connected clients.
+
+SQL Server deployments must apply `prisma/migrations/20261105122500_add_notifications/migration.sql`
+once before starting the new version (or create the table through the normal reviewed schema
+deployment process). MongoDB creates its notification indexes at startup. Notifications are
+deduplicated per user and request event; `GET /api/v1/notifications` returns the signed-in user's
+notifications, and `PATCH /api/v1/notifications/:id/read` marks only that user's notification read.
+Request events are emitted only after the request transaction succeeds and notification persistence
+has been attempted. The client reloads unread records after reconnecting.
+
+This deployment uses a single Socket.IO instance. Multi-instance deployments need a shared Socket.IO
+adapter such as Redis and sticky sessions when HTTP long-polling is enabled; connection recovery by
+itself is not a cross-instance message adapter. The handshake limiter is process-local as well, so
+replace it with a shared limiter when scaling across instances. Use graceful backend shutdown and
+monitor the backend's socket connection/authentication and notification persistence logs.
+
 ## MongoDB setup
 
 MongoDB transactions are used to keep book-copy reservations and borrowing requests consistent.

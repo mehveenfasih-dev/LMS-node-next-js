@@ -19,6 +19,7 @@ const env = {
   MONGODB_DATABASE: process.env.MONGODB_DATABASE,
   MONGODB_MAX_POOL_SIZE: num("MONGODB_MAX_POOL_SIZE", 10),
   JWT_SECRET: process.env.JWT_SECRET,
+  SOCKET_AUTH_SECRET: process.env.SOCKET_AUTH_SECRET || process.env.JWT_SECRET,
   SESSION_DAYS: num("SESSION_DAYS", 7),
   LOAN_PERIOD_DAYS: num("LOAN_PERIOD_DAYS", 14),
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY || "",
@@ -32,6 +33,9 @@ if (env.DB_PROVIDER === "mongodb") missing.push("MONGODB_URI")
 const missingValues = missing.filter((key) => !env[key])
 if (missingValues.length) {
   throw new Error(`Missing required environment variable(s): ${missingValues.join(", ")}`)
+}
+if (process.env.SOCKET_AUTH_SECRET && env.SOCKET_AUTH_SECRET.length < 32) {
+  throw new Error("SOCKET_AUTH_SECRET must contain at least 32 characters.")
 }
 if (
   env.DB_PROVIDER === "mongodb" &&

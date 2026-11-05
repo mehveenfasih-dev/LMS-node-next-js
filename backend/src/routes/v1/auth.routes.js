@@ -12,6 +12,7 @@ router.post(ROUTES.AUTH.REGISTER, validate({ body: registerSchema }), controller
 router.post(ROUTES.AUTH.LOGIN, loginLimiter, loginSlowDown, validate({ body: loginSchema }), controller.login)
 router.post(ROUTES.AUTH.LOGOUT, controller.logout)
 router.get(ROUTES.AUTH.ME, authenticate, controller.me)
+router.get(ROUTES.AUTH.SOCKET_TICKET, authenticate, controller.socketTicket)
 router.post(ROUTES.AUTH.GOOGLE, requireInternalKey, validate({ body: googleSchema }), controller.google)
 
 module.exports = router

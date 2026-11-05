@@ -5,6 +5,7 @@ const repositoryContracts = {
   books: ["list", "findById", "save", "remove"],
   users: ["findByEmail", "findById", "list", "createMember", "createAdmin", "findOrCreateGoogle", "setActive"],
   requests: ["list", "findById", "create", "changeStatus"],
+  notifications: ["createOnce", "listForUser", "markRead"],
   reports: ["summary", "monthly", "categories"],
 }
 

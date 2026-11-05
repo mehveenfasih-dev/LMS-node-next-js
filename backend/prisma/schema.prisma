@@ -25,8 +25,26 @@ model User {
   createdAt      DateTime        @default(now()) @db.DateTime
   role           Role            @relation(fields: [roleID], references: [roleID], onUpdate: Cascade, onDelete: NoAction, map: "fk_users_role")
   borrowRequests BorrowRequest[]
+  notifications  Notification[]
 
   @@map("Users")
+}
+
+model Notification {
+  notificationID String    @id @default(uuid()) @db.UniqueIdentifier
+  userID         Int
+  dedupeKey      String    @db.NVarChar(255)
+  event          String    @db.NVarChar(50)
+  title          String    @db.NVarChar(150)
+  message        String    @db.NVarChar(500)
+  requestID      BigInt?
+  createdAt      DateTime  @default(now()) @db.DateTime2
+  readAt         DateTime? @db.DateTime2
+  user           User      @relation(fields: [userID], references: [userID], onUpdate: Cascade, onDelete: Cascade, map: "fk_notification_user")
+
+  @@unique([userID, dedupeKey], map: "UQ_Notifications_user_dedupe")
+  @@index([userID, createdAt], map: "idx_notifications_user_created")
+  @@map("Notifications")
 }
 
 model Category {
